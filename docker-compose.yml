@@ -1,7 +1,7 @@
 version: '3.8'
 services:
-  emqx:
-    image: emqx/emqx
+  emqx-enterprise:
+    image: emqx/emqx-enterprise:5.0.3
     container_name: emqx
     healthcheck:
       test: ["CMD", "emqx", "ping"]
@@ -26,11 +26,11 @@ services:
     ports:
       - 8085:8085
     command:
-      - '--emqx.nodes=emqx:18083'
+      - '--emqx.nodes=emqx-enterprise:18083'
       - '--emqx.auth-username=5256FEDC3FC3'
       - '--emqx.auth-password=75ECB2F1-9CE0-4768-921C-15AE412E5FBE'
     depends_on:
-      emqx:
+      emqx-enterprise:
         condition: service_healthy
 
   mqttx-simulate:
@@ -42,9 +42,9 @@ services:
       - /bin/sh
       - -c
       - |
-        mqttx simulate --file /app/mqttx-simulate/oil-extraction.js -c 5 -h emqx -im 1000
+        mqttx simulate --file /app/mqttx-simulate/oil-extraction.js -c 5 -h emqx-enterprise -im 1000
     depends_on:
-      emqx:
+      emqx-enterprise:
         condition: service_healthy
 
   mqttx:
@@ -54,9 +54,9 @@ services:
       - /bin/sh
       - -c
       - |
-        mqttx sub -t 'mqttx/simulate/#' -v -h emqx
+        mqttx sub -t 'mqttx/simulate/#' -v -h emqx-enterprise
     depends_on:
-      emqx:
+      emqx-enterprise:
         condition: service_healthy
 
   mysql:
@@ -78,7 +78,7 @@ services:
       - ./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yml
 
   grafana:
-    image: grafana/grafana-oss
+    image: grafana/grafana
     container_name: grafana
     ports:
       - 3000:3000
@@ -90,7 +90,7 @@ services:
       - ./grafana-provisioning/dashboard.yaml:/etc/grafana/provisioning/dashboards/dashboard.yaml
       - ./grafana-provisioning/datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml
     depends_on:
-      emqx:
+      emqx-enterprise:
         condition: service_healthy
       mysql:
         condition: service_started
